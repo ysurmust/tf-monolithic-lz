@@ -68,7 +68,6 @@ jobs:
       run: terraform validate # so far nothing connect to Azure, so it will validate the tf files and check for syntax errors and other issues.
 
       
-`
     # TFLint
     ############################################################
 
