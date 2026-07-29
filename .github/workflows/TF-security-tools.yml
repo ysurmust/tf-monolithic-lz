@@ -79,14 +79,23 @@ jobs:
 
     # - name: Init TFLint
     #   run: tflint --init
+
+    - name: Debug TFLint
+      working-directory: parent
+      run: |
+        pwd
+        ls -la
+        mkdir -p ../reports
+        tflint --init
+        tflint
     
     #create a reports directory to store the output of tflint in sarif format ( Static Analysis Results Interchange Format) which is a standard format for the output of static analysis tools. This format can be used by various tools to display the results in a consistent manner.
-    - name: Run TFLint
-      working-directory: parent # this is the root directory of the repo where the tf files are located. If your tf files are in a subdirectory, you can specify that subdirectory here.
-      run: |
-        mkdir -p ../reports
-        tflint --init    
-        tflint --format sarif > ../reports/tflint.sarif
+    # - name: Run TFLint
+    #   working-directory: parent # this is the root directory of the repo where the tf files are located. If your tf files are in a subdirectory, you can specify that subdirectory here.
+    #   run: |
+    #     mkdir -p ../reports
+    #     tflint --init    
+    #     tflint --format sarif > ../reports/tflint.sarif
 
    
     # Checkov
