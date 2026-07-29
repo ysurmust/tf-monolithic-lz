@@ -29,10 +29,10 @@ resource "azurerm_linux_virtual_machine" "linux_virtual_machine" {
 
   disable_password_authentication = each.value.disable_password_authentication
 
-network_interface_ids = [
-  for nic_key in each.value.network_interface_keys :
-  azurerm_network_interface.nics[nic_key].id
-]
+  network_interface_ids = [
+    for nic_key in each.value.network_interface_keys :
+    azurerm_network_interface.nics[nic_key].id
+  ]
 
 
 

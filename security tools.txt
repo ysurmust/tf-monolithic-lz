@@ -1,0 +1,48 @@
+# Lint
+tflint --recursive > .\reports\tflint-report.txt
+
+# A Terraform linter is a tool that helps ensure the quality and consistency of Terraform code by analyzing it for potential issues, errors, or violations of best practices.
+
+# Linting is the process of using a static code analysis tool to identify potential errors, bugs, stylistic errors, and suspicious constructs in your code. The term “lint” comes from the Unix utility lint, which was used to analyze C code for errors. Linting tools are available for use with most coding languages, not just HCL used by Terraform.
+
+# By using linting tools, development teams can establish a consistent coding style across projects, make the code more readable and understandable, and catch common mistakes that might go unnoticed during manual code reviews. Linting promotes best practices and helps maintain a high level of code quality throughout the development lifecycle.
+
+
+# Security
+tfsec . --out .\reports\tfsec-report.json
+#tfsec takes a developer-first approach to scanning your Terraform templates; using static analysis and deep integration with the official HCL parser it ensures that security issues can be detected before your infrastructure changes take effect
+
+# Secrets
+# gitleaks is an open-source secret scanner for git repositories, files, and directories. it doesnt catch password but it does cath long key, AWS keys, azure storage accouns kyets etc. gitleaks dir . is the command
+gitleaks dir . --report-format json --report-path .\reports\gitleaks-report.json
+
+# TruffleHog™ uncovers exposed non-human identities (NHIs) and their secrets, making it easier for security teams to prioritize  risk and remediate faster.
+# TruffleHog Analyze automatically identifies the resources and permissions associated with NHIs, API key and other secrets without requiring access to a provider’s UI, reducing time to remediation.
+
+
+# terraform formatting
+terraform fmt -check -recursive
+
+
+#TFLint – Terraform best practices
+tflint --recursive > .\reports\tflint-report.txt
+
+#tfsec – Terraform security
+tfsec . --format json --out .\reports\tfsec-report.json
+
+#Checkov – security and compliance policies
+checkov -d . -o json > .\reports\checkov-report.json
+
+#Gitleaks – secret detection
+gitleaks dir . --report-format json --report-path .\reports\gitleaks-report.json
+
+#TruffleHog – advanced secret detection
+trufflehog filesystem . --json > .\reports\trufflehog-report.json
+
+# # infracost tool ( new version) - for cost
+infracost scan . --json > .\reports\infracost-report.json
+
+These below commands are for previous version of infracost and no longer working
+terraform plan -out="tfplan.binary"
+terraform show -json "tfplan.binary" > tfplan.json
+infracost scan infracost-report.json --json > ..\reports\infracost-report.json

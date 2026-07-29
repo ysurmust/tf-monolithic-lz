@@ -14,6 +14,9 @@ variable "virtual_networks" {
   }))
 }
 
+variable "storage_accounts" {}
+
+
 variable "subnets" {
   type = map(object({
     name                 = string
@@ -49,4 +52,14 @@ variable "network_security_groups" {
   type = any
 }
 
+variable "key_vaults" {
+  type = any
+}
 
+variable "key_vaults_with_access_policies" {
+  type = any
+}
+
+variable "key_vault_secrets" {
+  type = any
+}
