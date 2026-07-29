@@ -1,0 +1,133 @@
+name: Terraform CI Pipeline
+
+on:
+  push:
+    branches:
+      - main
+      - develop
+
+  pull_request:
+    branches:
+      - main
+
+permissions:
+  contents: read
+  security-events: write
+
+jobs:
+  terraform:
+
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        shell: bash
+
+    env:
+      TF_VERSION: "1.15.8"
+
+    steps:
+
+    ############################################################
+    # Checkout
+    ############################################################
+
+    - name: Checkout Repository
+      uses: actions/checkout@v7.0.0
+
+    ############################################################
+    # Terraform
+    ############################################################
+
+    - name: Setup Terraform
+      uses: hashicorp/setup-terraform@v3
+      with:
+        terraform_version: ${{ env.TF_VERSION }}
+
+    - name: Terraform Init
+      run: terraform init
+
+    - name: Terraform Format
+      run: terraform fmt -recursive -check
+
+    - name: Terraform Validate
+      run: terraform validate
+
+    ############################################################
+    # TFLint
+    ############################################################
+
+    - name: Setup TFLint
+      uses: terraform-linters/setup-tflint@v4
+
+    - name: Init TFLint
+      run: tflint --init
+
+    - name: Run TFLint
+      run: |
+        mkdir -p reports
+        tflint --format sarif > reports/tflint.sarif
+
+    ############################################################
+    # Checkov
+    ############################################################
+
+    - name: Run Checkov
+      uses: bridgecrewio/checkov-action@master
+      with:
+        directory: .
+        framework: terraform
+        output_format: sarif
+        output_file_path: reports/checkov.sarif
+        soft_fail: true
+
+    ############################################################
+    # tfsec
+    ############################################################
+
+    - name: Run tfsec
+      uses: aquasecurity/tfsec-action@v1.0.3
+      with:
+        soft_fail: true
+
+    ############################################################
+    # Gitleaks
+    ############################################################
+
+    - name: Run Gitleaks
+      uses: gitleaks/gitleaks-action@v2
+
+    ############################################################
+    # Terraform Plan
+    ############################################################
+
+    - name: Terraform Plan
+      run: |
+        terraform plan -out=tfplan.binary
+        terraform show -json tfplan.binary > tfplan.json
+
+    ############################################################
+    # Infracost
+    ############################################################
+
+    - name: Setup Infracost
+      uses: infracost/actions/setup@v3
+
+    - name: Generate Cost Estimate
+      env:
+        INFRACOST_API_KEY: ${{ secrets.INFRACOST_API_KEY }}
+      run: |
+        infracost breakdown \
+          --path . \
+          --format json \
+          --out-file reports/infracost.json
+
+    ############################################################
+    # Upload Reports
+    ############################################################
+
+    - name: Upload Reports
+      uses: actions/upload-artifact@v7
+      with:
+        name: terraform-reports
+        path: reports/
