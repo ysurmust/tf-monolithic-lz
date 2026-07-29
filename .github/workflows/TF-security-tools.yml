@@ -1,114 +1,136 @@
-name: Terraform CI Pipeline
+name: Terraform CI Pipeline with security
+# this code is used code quality, security scanning, cost estimation, infr plan an dpublish rpeorts.
 
+# triggers events using on: commands
+#“This workflow is triggered on pushes to main and on pull requests targeting main, which ensures every change is validated before merge.”
 on:
   push:
     branches:
       - main
-      - develop
+      
 
   pull_request:
     branches:
       - main
 
+# without write permission, checkov/tflint upload will not work
 permissions:
   contents: read
   security-events: write
 
+# creating jobs one by one.workflow can have multiple jobs, each job can have multiple steps. Each step can run commands or use actions.
 jobs:
+  # first job name terraform
   terraform:
 
-    runs-on: ubuntu-latest
-
+    runs-on: ubuntu-latest # GitHub creates a fresh Linux VM
     defaults:
       run:
         shell: bash
-
     env:
-      TF_VERSION: "1.15.8"
+      TF_VERSION: "1.15.8" # this is latest TF version i have
 
     steps:
 
-    ############################################################
     # Checkout
     ############################################################
 
     - name: Checkout Repository
-      uses: actions/checkout@v7.0.0
+      uses: actions/checkout@v7.0.0 # v7 is the latest version of checkout action
       with:
-        fetch-depth: 0
+        fetch-depth: 0 # fetch all history for all branches and tags. This is required for some tools like tflint to work properly.
 
-    ############################################################
+  
     # Terraform
     ############################################################
 
     - name: Setup Terraform
-      uses: hashicorp/setup-terraform@v3
+      uses: hashicorp/setup-terraform@v4 # version 4 is latest. It will install terraform cli and set up the environment for you
       with:
-        terraform_version: ${{ env.TF_VERSION }}
+        terraform_version: ${{ env.TF_VERSION }} # tf version is set in env variable above in line 31
 
+    - name: Terraform Version
+      run: terraform version # show the version of terraform installed
+    - name: Show Files
+      run: |
+        pwd
+        ls -R
     - name: Terraform Init
-      run: terraform init
+      working-directory: parent # this is the root directory of the repo where the tf files are located. If your tf files are in a subdirectory, you can specify that subdirectory here.
+      run: terraform init # it will do usual downlaod providers, modules and backend plugins
 
     - name: Terraform Format
-      run: terraform fmt -recursive -check
+      working-directory: . # this is the root directory of the repo where the tf files are located. If your tf files are in a subdirectory, you can specify that subdirectory here.
+      run: terraform fmt -recursive -check # validating all folders and subfolders for formatting issues. -recursive will check all subfolders and -check will only check and not fix the issues.
 
     - name: Terraform Validate
-      run: terraform validate
+      working-directory: parent # this is the root directory of the repo where the tf files are located. If your tf files are in a subdirectory, you can specify that subdirectory here.
+      run: terraform validate # so far nothing connect to Azure, so it will validate the tf files and check for syntax errors and other issues.
 
-    ############################################################
+      
+`
     # TFLint
     ############################################################
 
     - name: Setup TFLint
-      uses: terraform-linters/setup-tflint@v4
+      uses: terraform-linters/setup-tflint@v6  # version 6 is latest. It will install tflint cli and set up the environment for you
+
+    - name: TFLint Version
+      run: tflint --version # show the version of tflint installed
 
     - name: Init TFLint
       run: tflint --init
-
+    
+    #create a reports directory to store the output of tflint in sarif format ( Static Analysis Results Interchange Format) which is a standard format for the output of static analysis tools. This format can be used by various tools to display the results in a consistent manner.
     - name: Run TFLint
       run: |
-        mkdir -p reports
+        mkdir -p reports    
         tflint --format sarif > reports/tflint.sarif
 
-    ############################################################
+   
     # Checkov
     ############################################################
 
     - name: Run Checkov
-      uses: bridgecrewio/checkov-action@master
+      uses: bridgecrewio/checkov-action@master # @master will always use the latest version of checkov-action
       with:
         directory: .
         framework: terraform
         output_format: sarif
-        output_file_path: reports/checkov.sarif
-        soft_fail: true
+        output_file_path: reports/checkov.sarif # location where the output of checkov will be stored in sarif format. This format can be used by various tools to display the results in a consistent manner.
+        soft_fail: true  # true means report finding but continue the workflow. false means fail the workflow if any finding is found.
 
-    ############################################################
+
     # tfsec
-    ############################################################
+    ############################################################ many companies run both checkov and tfsec to get more coverage of security issues.
+    # tfsec is a static analysis tool for Terraform code that checks for security issues and best practices. 
+    #It can be used to identify potential vulnerabilities in your infrastructure code before it is deployed.
 
     - name: Run tfsec
       uses: aquasecurity/tfsec-action@v1.0.3
       with:
-        soft_fail: true
+        soft_fail: true # true means report finding but continue the workflow. false means fail the workflow if any finding is found.
 
-    ############################################################
+
     # Gitleaks
     ############################################################
 
     - name: Run Gitleaks
       uses: gitleaks/gitleaks-action@v3
+      with:
+        soft_fail: true # true means report finding but continue the workflow. false means fail the workflow if any finding is found.
 
-    ############################################################
+
     # Terraform Plan
     ############################################################
 
     - name: Terraform Plan
+      working-directory: parent # this is the root directory of the repo where the tf files are located. If your tf files are in a subdirectory, you can specify that subdirectory here.
       run: |
         terraform plan -out=tfplan.binary
         terraform show -json tfplan.binary > tfplan.json
 
-    ############################################################
+   
     # Infracost
     ############################################################
 
@@ -124,7 +146,7 @@ jobs:
           --format json \
           --out-file reports/infracost.json
 
-    ############################################################
+    
     # Upload Reports
     ############################################################
 
