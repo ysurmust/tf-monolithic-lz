@@ -129,8 +129,8 @@ jobs:
           --report-format sarif \
           --report-path reports/gitleaks.sarif \
           --redact
-      with:
-        soft_fail: true # true means report finding but continue the workflow. false means fail the workflow if any finding is found.
+        with:
+          soft_fail: true # true means report finding but continue the workflow. false means fail the workflow if any finding is found.
     # Terraform Plan
     ############################################################
 
