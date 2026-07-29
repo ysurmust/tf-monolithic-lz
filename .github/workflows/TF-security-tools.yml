@@ -68,7 +68,6 @@ jobs:
       run: terraform validate # so far nothing connect to Azure, so it will validate the tf files and check for syntax errors and other issues.
 
       
-`
     # TFLint
     ############################################################
 
@@ -85,7 +84,7 @@ jobs:
     - name: Run TFLint
       run: |
         mkdir -p reports    
-        tflint --format sarif > reports/tflint.sarif
+        tflint --format sarif > ../reports/tflint.sarif
 
    
     # Checkov
@@ -94,7 +93,7 @@ jobs:
     - name: Run Checkov
       uses: bridgecrewio/checkov-action@master # @master will always use the latest version of checkov-action
       with:
-        directory: .
+        directory: parent
         framework: terraform
         output_format: sarif
         output_file_path: reports/checkov.sarif # location where the output of checkov will be stored in sarif format. This format can be used by various tools to display the results in a consistent manner.
@@ -109,49 +108,65 @@ jobs:
     - name: Run tfsec
       uses: aquasecurity/tfsec-action@v1.0.3
       with:
+        working-directory: parent # this is the root directory of the repo where the tf files are located. If your tf files are in a subdirectory, you can specify that subdirectory here.
+        format: sarif # output format of the report. sarif is a standard format for the output of static analysis tools. This format can be used by various tools to display the results in a consistent manner.
+        sarif-file: reports/tfsec.sarif # location where the output of tfsec will be stored in sarif format. This format can be used by various tools to display the results in a consistent manner.
         soft_fail: true # true means report finding but continue the workflow. false means fail the workflow if any finding is found.
 
 
     # Gitleaks
     ############################################################
 
+    # - name: Run Gitleaks
+    #   uses: gitleaks/gitleaks-action@v3
+    #   with:
+    #     soft_fail: true # true means report finding but continue the workflow. false means fail the workflow if any finding is found.
+
     - name: Run Gitleaks
-      uses: gitleaks/gitleaks-action@v3
+      run: |
+        mkdir -p reports
+        gitleaks detect \
+          --report-format sarif \
+          --report-path reports/gitleaks.sarif \
+          --redact
       with:
         soft_fail: true # true means report finding but continue the workflow. false means fail the workflow if any finding is found.
-
-
     # Terraform Plan
     ############################################################
 
-    - name: Terraform Plan
-      working-directory: parent # this is the root directory of the repo where the tf files are located. If your tf files are in a subdirectory, you can specify that subdirectory here.
-      run: |
-        terraform plan -out=tfplan.binary
-        terraform show -json tfplan.binary > tfplan.json
+    # - name: Terraform Plan
+    #   working-directory: parent # this is the root directory of the repo where the tf files are located. If your tf files are in a subdirectory, you can specify that subdirectory here.
+    #   run: |
+    #     terraform plan -out=tfplan.binary
+    #     terraform show -json tfplan.binary > tfplan.json
 
    
     # Infracost
     ############################################################
 
-    - name: Setup Infracost
-      uses: infracost/actions/setup@v3
+    # - name: Setup Infracost
+    #   uses: infracost/actions/setup@v3
 
-    - name: Generate Cost Estimate
-      env:
-        INFRACOST_API_KEY: ${{ secrets.INFRACOST_API_KEY }}
-      run: |
-        infracost breakdown \
-          --path . \
-          --format json \
-          --out-file reports/infracost.json
+    # - name: Generate Cost Estimate
+    #   env:
+    #     INFRACOST_API_KEY: ${{ secrets.INFRACOST_API_KEY }}
+    #   run: |
+    #     infracost breakdown \
+    #       --path . \
+    #       --format json \
+    #       --out-file reports/infracost.json
 
     
     # Upload Reports
     ############################################################
+    - name: Show Reports
+      run: |
+        echo "Reports folder:"
+        ls -R reports || true
 
     - name: Upload Reports
       uses: actions/upload-artifact@v7
       with:
         name: terraform-reports
-        path: reports/
+        path: |
+          reports/**
