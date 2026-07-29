@@ -120,30 +120,30 @@ jobs:
         soft_fail: true # true means report finding but continue the workflow. false means fail the workflow if any finding is found.
 
 
-    # Terraform Plan
+    # Terraform Plan ( not using due to Azure portal connection issue)
     ############################################################
 
-    - name: Terraform Plan
-      working-directory: parent # this is the root directory of the repo where the tf files are located. If your tf files are in a subdirectory, you can specify that subdirectory here.
-      run: |
-        terraform plan -out=tfplan.binary
-        terraform show -json tfplan.binary > tfplan.json
+    # - name: Terraform Plan
+    #   working-directory: parent # this is the root directory of the repo where the tf files are located. If your tf files are in a subdirectory, you can specify that subdirectory here.
+    #   run: |
+    #     terraform plan -out=tfplan.binary
+    #     terraform show -json tfplan.binary > tfplan.json
 
    
     # Infracost
     ############################################################
 
-    - name: Setup Infracost
-      uses: infracost/actions/setup@v3
+    # - name: Setup Infracost
+    #   uses: infracost/actions/setup@v3
 
-    - name: Generate Cost Estimate
-      env:
-        INFRACOST_API_KEY: ${{ secrets.INFRACOST_API_KEY }}
-      run: |
-        infracost breakdown \
-          --path . \
-          --format json \
-          --out-file reports/infracost.json
+    # - name: Generate Cost Estimate
+    #   env:
+    #     INFRACOST_API_KEY: ${{ secrets.INFRACOST_API_KEY }}
+    #   run: |
+    #     infracost breakdown \
+    #       --path . \
+    #       --format json \
+    #       --out-file reports/infracost.json
 
     
     # Upload Reports
