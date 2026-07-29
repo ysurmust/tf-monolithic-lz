@@ -37,6 +37,8 @@ jobs:
 
     - name: Checkout Repository
       uses: actions/checkout@v7.0.0 # v7 is the latest version of checkout action
+      with:
+        fetch-depth: 0 # fetch all history for all branches and tags. This is required for some tools like tflint to work properly.
 
   
     # Terraform
@@ -47,16 +49,26 @@ jobs:
       with:
         terraform_version: ${{ env.TF_VERSION }} # tf version is set in env variable above in line 31
 
-    
+    - name: Terraform Version
+      run: terraform version # show the version of terraform installed
+    - name: Show Files
+      run: |
+        pwd
+        ls -R
     - name: Terraform Init
+      working-directory: parent # this is the root directory of the repo where the tf files are located. If your tf files are in a subdirectory, you can specify that subdirectory here.
       run: terraform init # it will do usual downlaod providers, modules and backend plugins
 
     - name: Terraform Format
+      working-directory: . # this is the root directory of the repo where the tf files are located. If your tf files are in a subdirectory, you can specify that subdirectory here.
       run: terraform fmt -recursive -check # validating all folders and subfolders for formatting issues. -recursive will check all subfolders and -check will only check and not fix the issues.
 
     - name: Terraform Validate
+      working-directory: parent # this is the root directory of the repo where the tf files are located. If your tf files are in a subdirectory, you can specify that subdirectory here.
       run: terraform validate # so far nothing connect to Azure, so it will validate the tf files and check for syntax errors and other issues.
 
+      
+`
     # TFLint
     ############################################################
 
@@ -113,6 +125,7 @@ jobs:
     ############################################################
 
     - name: Terraform Plan
+      working-directory: parent # this is the root directory of the repo where the tf files are located. If your tf files are in a subdirectory, you can specify that subdirectory here.
       run: |
         terraform plan -out=tfplan.binary
         terraform show -json tfplan.binary > tfplan.json
