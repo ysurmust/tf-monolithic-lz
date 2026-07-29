@@ -3,18 +3,6 @@ resource_groups = {
     name     = "rg1"
     location = "Australia East"
   }
-  rg2 = {
-    name     = "rg2"
-    location = "Australia East"
-  }
-  rg3 = {
-    name     = "rg3"
-    location = "Australia East"
-  }
-  rg4 = {
-    name     = "rg4"
-    location = "Australia East"
-  }
 }
 
 virtual_networks = {
@@ -52,6 +40,21 @@ subnets = {
     address_prefixes     = ["10.0.3.0/26"]
   }
 }
+
+storage_accounts = {
+  sa1 = {
+    name                     = "surmuststorage"
+    location                 = "Australia East"
+    resource_group_name      = "rg1"
+    account_tier             = "Standard"
+    account_replication_type = "LRS"
+    # tags                     = {
+    #   environment = "dev"
+    #   project     = "terraform-modules"
+    # }
+  }
+}
+
 
 network_interfaces = {
   nic1 = {
@@ -143,6 +146,47 @@ linux_virtual_machines = {
     image_offer     = "0001-com-ubuntu-server-jammy"
     image_sku       = "22_04-lts-gen2"
     image_version   = "latest"
+  }
+}
+
+#keyvaults with RBAC enabled
+key_vaults = {
+  kv1 = {
+    name                       = "surmustKeyVaultRBAC"
+    location                   = "Australia East"
+    resource_group_name        = "rg1"
+    soft_delete_retention_days = 7
+    purge_protection_enabled   = true
+    sku_name                   = "standard"
+    rbac_authorization_enabled = true
+  }
+}
+
+key_vaults_with_access_policies = {
+  kv1AP = {
+    name                = "surmustKeyVaultWithAP"
+    location            = "Australia East"
+    resource_group_name = "rg1"
+
+    soft_delete_retention_days = 7
+    purge_protection_enabled   = true
+    sku_name                   = "standard"
+
+    key_permissions         = ["Get"]
+    secret_permissions      = ["Get", "Set", "Delete", "List"]
+    certificate_permissions = ["Get"]
+  }
+}
+
+# creating secrets in the key vaults for VM
+key_vault_secrets = {
+  vm_admin_username = {
+    name  = "vm-admin-username"
+    value = "azureuser"
+  }
+  vm_admin_password = {
+    name  = "vm-admin-password"
+    value = "Password12345!"
   }
 }
 
@@ -240,3 +284,5 @@ network_security_groups = {
     }
   }
 }
+
+
