@@ -135,14 +135,11 @@ jobs:
     #     soft_fail: true # true means report finding but continue the workflow. false means fail the workflow if any finding is found.
 
     - name: Run Gitleaks
-      run: |
-        mkdir -p reports
-        gitleaks detect \
-          --report-format sarif \
-          --report-path reports/gitleaks.sarif \
-          --redact
-        with:
-          soft_fail: true # true means report finding but continue the workflow. false means fail the workflow if any finding is found.
+      uses: gitleaks/gitleaks-action@v3
+      with:
+        soft_fail: true # true means report finding but continue the workflow. false means fail the workflow if any finding is found.
+
+   
     # Terraform Plan
     ############################################################
 
