@@ -17,11 +17,11 @@ module "subnet" {
   subnets    = var.subnets
 }
 
-# module "storage_account" {
-#   depends_on       = [module.resource_group]
-#   source           = "../modules/azurerm_storage_account"
-#   storage_accounts = var.storage_accounts
-# }
+module "storage_account" {
+  depends_on       = [module.resource_group]
+  source           = "../modules/azurerm_storage_account"
+  storage_accounts = var.storage_accounts
+}
 
 
 # hiding it
@@ -33,21 +33,19 @@ module "subnet" {
 # }
 
 
-# module "linux_virtual_machine" {
-#   depends_on             = [module.subnet, module.resource_group]
-#   source                 = "../modules/azurerm_linux_virtual_machine"
-#   linux_virtual_machines = var.linux_virtual_machines
-#   nics                   = var.network_interfaces
-
-# }
+module "linux_virtual_machine" {
+  depends_on = [module.subnet]
+  source     = "../modules/azurerm_linux_virtual_machine"
+  vms        = var.vms
+}
 
 
 
-# module "public_ip" {
-#   depends_on = [module.resource_group]
-#   source     = "../modules/azurerm_public_ip"
-#   public_ips = var.public_ips
-# }
+module "public_ip" {
+  depends_on = [module.resource_group]
+  source     = "../modules/azurerm_public_ip"
+  public_ips = var.public_ips
+}
 
 # module "bastion" {
 #   depends_on    = [module.subnet, module.resource_group, module.public_ip]
@@ -57,34 +55,28 @@ module "subnet" {
 #   public_ip_ids = module.public_ip.public_ip_ids # this output module also need to be created in public ip module to get the public ip id and pass it to bastion module
 # }
 
-# module "peering" {
-#   depends_on = [module.virtual_network, module.resource_group]
-#   source     = "../modules/azurerm_virtual_network_peering"
-#   peerings   = var.peerings
-#   vnet_ids   = module.virtual_network.vnet_ids # this output module also need to be created in virtual network module to get the vnet id and pass it to peering module
+module "peering" {
+  depends_on = [module.virtual_network, module.resource_group]
+  source     = "../modules/azurerm_virtual_network_peering"
+  peerings   = var.peerings
+  vnet_ids   = module.virtual_network.vnet_ids # this output module also need to be created in virtual network module to get the vnet id and pass it to peering module
+}
+
+module "network_security_group" {
+  depends_on              = [module.resource_group]
+  source                  = "../modules/azurerm_network_security_group"
+  network_security_groups = var.network_security_groups
+}
+
+# module "key_vault" {
+#   depends_on = [module.resource_group]
+#   source     = "../modules/azurerm_key_vault"
+#   key_vaults = var.key_vaults
 # }
 
-# module "network_security_group" {
-#   depends_on              = [module.resource_group]
-#   source                  = "../modules/azurerm_network_security_group"
-#   network_security_groups = var.network_security_groups
-# }
-
-module "key_vault" {
-  depends_on = [module.resource_group]
-  source     = "../modules/azurerm_key_vault"
-  key_vaults = var.key_vaults
+module "key_vaults_AP" {
+  depends_on    = [module.resource_group]
+  source        = "../modules/azurerm_key_vault_AP"
+  key_vaults_AP = var.key_vaults_AP
 }
 
-module "key_vault_with_access_policies" {
-  depends_on                      = [module.resource_group]
-  source                          = "../modules/azurerm_key_vault_with_AccessPolicy"
-  key_vaults_with_access_policies = var.key_vaults_with_access_policies
-}
-
-module "key_vault_secret" {
-  depends_on        = [module.key_vault, module.key_vault_with_access_policies]
-  source            = "../modules/azurerm_key_vault_secret"
-  key_vault_id      = module.key_vault_with_access_policies.key_vault_ids["surmustKeyVaultWithAP"] # Assuming you want to use the first Key Vault created in the key_vault module
-  key_vault_secrets = var.key_vault_secrets
-}

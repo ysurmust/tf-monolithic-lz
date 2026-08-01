@@ -1,9 +1,5 @@
-variable "linux_virtual_machines" {
+variable "vms" {
   type = any
 
 }
 
-
-variable "nics" {
-  type = any
-}

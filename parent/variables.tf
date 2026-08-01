@@ -32,7 +32,7 @@ variable "network_interfaces" {
 }
 
 
-variable "linux_virtual_machines" {
+variable "vms" {
   type = any
 }
 
@@ -52,14 +52,12 @@ variable "network_security_groups" {
   type = any
 }
 
-variable "key_vaults" {
+# variable "key_vaults" {
+#   type = any
+# }
+
+variable "key_vaults_AP" {
   type = any
 }
 
-variable "key_vaults_with_access_policies" {
-  type = any
-}
 
-variable "key_vault_secrets" {
-  type = any
-}
