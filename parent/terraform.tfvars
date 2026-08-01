@@ -106,15 +106,26 @@ public_ips = {
 
 
 
-linux_virtual_machines = {
+vms = {
 
   vm1 = {
-    name                            = "linuxvm1"
-    location                        = "Australia East"
-    resource_group_name             = "rg1"
-    size                            = "Standard_B2ats_v2"
-    admin_username                  = "azureuser"
-    admin_password                  = "Password12345!"
+    vms_name                      = "linuxvm1"
+    location                      = "Australia East"
+    resource_group_name           = "rg1"
+    nic_subnet_name               = "frontend"
+    virtual_network_name          = "vnet1"
+    nic_name                      = "nic1"
+    ip_name                       = "nic1-ipconfig"
+    private_ip_address_allocation = "Dynamic"
+
+    vm_size = "Standard_B2ats_v2"
+    # admin_username                  = "azureuser"
+    # admin_password                  = "Password12345!"
+    key_vault_name       = "surmustKeyVaultAP"
+    secret_user_name     = "vm-admin-login"
+    secret_password_name = "vm-admin-password"
+
+
     disable_password_authentication = false
 
     network_interface_keys = ["nic1"]
@@ -129,12 +140,24 @@ linux_virtual_machines = {
   }
 
   vm2 = {
-    name                            = "linuxvm2"
-    location                        = "Australia East"
-    resource_group_name             = "rg1"
-    size                            = "Standard_B2ats_v2"
-    admin_username                  = "azureuser"
-    admin_password                  = "Password12345!"
+    vms_name                      = "linuxvm2"
+    location                      = "Australia East"
+    resource_group_name           = "rg1"
+    nic_subnet_name               = "backend"
+    virtual_network_name          = "vnet1"
+    nic_name                      = "nic2"
+    ip_name                       = "nic2-ipconfig"
+    private_ip_address_allocation = "Dynamic"
+
+    vm_size = "Standard_B2ats_v2"
+    # admin_username                  = "azureuser"
+    # admin_password                  = "Password12345!"
+
+    key_vault_name       = "surmustKeyVaultAP"
+    secret_user_name     = "vm-admin-login"
+    secret_password_name = "vm-admin-password"
+
+
     disable_password_authentication = false
 
     network_interface_keys = ["nic2"]
@@ -150,23 +173,28 @@ linux_virtual_machines = {
 }
 
 #keyvaults with RBAC enabled
-key_vaults = {
-  kv1 = {
-    name                       = "surmustKeyVaultRBAC"
-    location                   = "Australia East"
-    resource_group_name        = "rg1"
-    soft_delete_retention_days = 7
-    purge_protection_enabled   = true
-    sku_name                   = "standard"
-    rbac_authorization_enabled = true
-  }
-}
+# key_vaults = {
+#   kv1 = {
+#     name                       = "surmustKeyVaultRBAC"
+#     location                   = "Australia East"
+#     resource_group_name        = "rg1"
+#     soft_delete_retention_days = 7
+#     purge_protection_enabled   = true
+#     sku_name                   = "standard"
+#     rbac_authorization_enabled = true
+#   }
+# }
 
-key_vaults_with_access_policies = {
+key_vaults_AP = {
   kv1AP = {
-    name                = "surmustKeyVaultWithAP"
+    name                = "surmustKeyVaultAP"
     location            = "Australia East"
     resource_group_name = "rg1"
+    secret_user_name    = "vm-admin-login"
+    secret_user_value   = "azureuser"
+
+    secret_password_name  = "vm-admin-password"
+    secret_password_value = "DevOps@123"
 
     soft_delete_retention_days = 7
     purge_protection_enabled   = true
@@ -177,19 +205,6 @@ key_vaults_with_access_policies = {
     certificate_permissions = ["Get"]
   }
 }
-
-# creating secrets in the key vaults for VM
-key_vault_secrets = {
-  vm_admin_username = {
-    name  = "vm-admin-username"
-    value = "azureuser"
-  }
-  vm_admin_password = {
-    name  = "vm-admin-password"
-    value = "Password12345!"
-  }
-}
-
 
 
 bastions = {
